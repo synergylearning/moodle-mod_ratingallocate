@@ -183,7 +183,22 @@ function ratingallocate_delete_instance($id) {
  * @return boolean
  */
 function ratingallocate_print_recent_activity($course, $viewfullnames, $timestart) {
-    return false; // True if anything was printed, otherwise false
+
+    $events = \mod_ratingallocate\recent_activity::get_recent_activity_events($course, $timestart);
+    if (empty($events)) {
+        return false;
+    }
+
+    $namesbyid = \mod_ratingallocate\recent_activity::get_activity_names($events);
+
+    foreach ($events as $event) {
+        echo html_writer::div(
+            html_writer::div($event->get_name()) .
+            html_writer::link($event->get_url(), $namesbyid[$event->objectid])
+        );
+    }
+
+    return true;
 }
 
 /**
