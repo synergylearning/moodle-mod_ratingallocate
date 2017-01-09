@@ -360,6 +360,11 @@ class ratingallocate {
                     this_db\ratingallocate_choices::ACTIVE,
                     $active,
                     array('id' => $choiceid));
+                if ($active) {
+                    \mod_ratingallocate\event\choice_enabled::trigger_from_choice($this->context, $choiceid);
+                } else {
+                    \mod_ratingallocate\event\choice_disabled::trigger_from_choice($this->context, $choiceid);
+                }
             }
             $this->process_action_show_choices();
         }
@@ -383,6 +388,7 @@ class ratingallocate {
                     $renderer->add_notification(get_string('choice_deleted_notification', ratingallocate_MOD_NAME,
                     $choice->{this_db\ratingallocate_choices::TITLE}),
                         self::NOTIFY_SUCCESS);
+                    \mod_ratingallocate\event\choice_deleted::trigger_from_choice($this->context, $choice);
                 } else {
                     $renderer->add_notification(
                         get_string('choice_deleted_notification_error', ratingallocate_MOD_NAME)
@@ -1178,14 +1184,11 @@ class ratingallocate {
             if (!empty($data->choiceid)) {
                 $choice->id = $data->choiceid;
                 $DB->update_record(this_db\ratingallocate_choices::TABLE, $choice->dbrecord);
+                \mod_ratingallocate\event\choice_updated::trigger_from_choice($this->context, $choice);
             } else {
-                $DB->insert_record(this_db\ratingallocate_choices::TABLE, $choice->dbrecord);
+                $choice->id = $DB->insert_record(this_db\ratingallocate_choices::TABLE, $choice->dbrecord);
+                \mod_ratingallocate\event\choice_created::trigger_from_choice($this->context, $choice);
             }
-
-            // Logging.
-//            $event = \mod_ratingallocate\event\choice_saved::create_simple(
-//                context_course::instance($this->course->id), $this->ratingallocateid, );
-//            $event->trigger();
 
             $transaction->allow_commit();
         } catch (Exception $e) {

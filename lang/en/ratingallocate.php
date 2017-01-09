@@ -292,4 +292,10 @@ $string['log_allocation_table_viewed_description'] =  'The user with id "{$a->us
 $string['log_allocation_statistics_viewed'] = 'Allocation statistics viewed';
 $string['log_allocation_statistics_viewed_description'] =  'The user with id "{$a->userid}" viewed the allocation statistics for the Fair Allocation with id "{$a->ratingallocateid}".';
 
+$string['log_choice_created'] = 'New choice created';
+$string['log_choice_deleted'] = 'Choice deleted';
+$string['log_choice_disabled'] = 'Choice disabled';
+$string['log_choice_enabled'] = 'Choice enabled';
+$string['log_choice_updated'] = 'Choice updated';
+
 $string['no_id_or_m_error'] = 'You must specify a course_module ID or an instance ID';
