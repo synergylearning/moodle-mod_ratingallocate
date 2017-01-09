@@ -189,12 +189,12 @@ function ratingallocate_print_recent_activity($course, $viewfullnames, $timestar
         return false;
     }
 
-    $namesbyid = \mod_ratingallocate\recent_activity::get_activity_names($events);
+    $details = \mod_ratingallocate\recent_activity::get_event_details($events);
 
-    foreach ($events as $event) {
+    foreach ($details as $event) {
         echo html_writer::div(
-            html_writer::div($event->get_name()) .
-            html_writer::link($event->get_url(), $namesbyid[$event->objectid])
+            html_writer::div($event->name) .
+            html_writer::link($event->url, $event->activityname)
         );
     }
 

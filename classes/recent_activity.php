@@ -27,7 +27,11 @@ namespace mod_ratingallocate;
 class recent_activity {
 
     private static $eventnames = [
-        '\mod_ratingallocate\event\allocation_published'
+        '\mod_ratingallocate\event\allocation_published',
+        '\mod_ratingallocate\event\choice_created',
+        '\mod_ratingallocate\event\choice_deleted',
+        '\mod_ratingallocate\event\choice_disabled',
+        '\mod_ratingallocate\event\choice_enabled',
     ];
 
     /**
@@ -60,18 +64,52 @@ class recent_activity {
 
     /**
      * @param \core\event\base[] $events
+     * @return object[]
      */
-    public static function get_activity_names($events) {
+    public static function get_event_details($events) {
+        global $DB;
 
         $modids = [];
+        $cmids = [];
+        $modnames = [];
+        $cmnames = [];
         foreach ($events as $event) {
-            $modids[] = $event->objectid;
+            if ($event->contextlevel == CONTEXT_COURSE) {
+                $modids[] = $event->objectid;
+            } else {
+                $cmids[] = $event->contextinstanceid;
+            }
+        }
+        if ($modids) {
+            list($msql, $params) = $DB->get_in_or_equal($modids);
+            $modnames = $DB->get_records_select_menu('ratingallocate', "id $msql", $params, '', 'id, name');
+        }
+        if ($cmids) {
+            list($csql, $params) = $DB->get_in_or_equal($cmids);
+            $sql = "
+              SELECT cm.id, r.name
+                FROM {course_modules} cm
+                JOIN {modules} m ON m.id = cm.module AND m.name = 'ratingallocate'
+                JOIN {ratingallocate} r ON r.id = cm.instance
+               WHERE cm.id $csql
+            ";
+            $cmnames = $DB->get_records_sql_menu($sql, $params);
         }
 
-        global $DB;
-        list($idinoreq, $params) = $DB->get_in_or_equal($modids);
-        $ratingsallocate = $DB->get_records_select_menu('ratingallocate', "id $idinoreq", $params, '', 'id,name');
+        $ret = [];
+        foreach ($events as $event) {
+            $detail = (object)[
+                'name' => $event->get_name(),
+                'url' => $event->get_url(),
+            ];
+            if ($event->contextlevel == CONTEXT_COURSE) {
+                $detail->activityname = isset($modnames[$event->objectid]) ? $modnames[$event->objectid] : '';
+            } else {
+                $detail->activityname = isset($cmnames[$event->contextinstanceid]) ? $cmnames[$event->contextinstanceid] : '';
+            }
+            $ret[] = $detail;
+        }
 
-        return $ratingsallocate;
+        return $ret;
     }
 }
